@@ -7,14 +7,26 @@
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 800
-#define SNAKE_SIZE 50
+
+#define BOARD_WIDTH 800
+#define BOARD_NUM_COLS 16
+#define BOARD_NUM_ROWS 16
+#define BOARD_X_OFF 0
+#define BOARD_Y_OFF 0
 
 #define BORDER_LEFT 0
 #define BORDER_RIGHT WINDOW_WIDTH
 #define BORDER_TOP 0
 #define BORDER_BOTTOM WINDOW_HEIGHT
 
+#define MAIN_TEXT_COL { .r = 200, .g = 200, .b = 200, .a = 255}
+
+#define SCORE_PADDING 10
+
+#define SNAKE_SIZE 50
 #define INIT_SNAKE_LEN 3
+
+#define COOKIE_RAD 20
 
 typedef enum {
     LEFT,
@@ -30,6 +42,7 @@ typedef struct {
     Vector2 cookiePos;
 
     int score;
+    char scoreText[256];
 } GameState;
 
 typedef struct Snake {
@@ -40,6 +53,7 @@ typedef struct Snake {
 
 Snake* initSnake();
 void drawBoard(Snake* head, GameState* state);
+void drawScore(GameState* state);
 void update(Snake* head, GameState* state);
 void checkInput(GameState* state);
 Vector2 getNewCookiePos(Snake* head);
