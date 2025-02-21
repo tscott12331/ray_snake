@@ -1,7 +1,7 @@
 #ifndef snake_main_h
 #define snake_main_h
 
-#include "include/raylib.h"
+#include "../include/raylib.h"
 
 #define GAME_FPS 10
 

@@ -1,5 +1,20 @@
 CC=gcc
 CFLAGS=-I include/ -L lib/ -lraylib -lgdi32 -lwinmm
 
-default: 
-	$(CC) main.c -o main.exe $(CFLAGS)
+
+.PHONY: all
+
+CFILES := $(shell find . -name "*.c")
+
+OBJS := $(patsubst %.c,%.o,$(CFILES))
+MAIN_EXE := snake
+
+all: $(OBJS)
+	$(CC) $^ -o $(MAIN_EXE) $(CFLAGS)
+
+
+%.o: %.c
+	$(CC) -c $^ -o $@
+
+clean:
+	rm -f $(OBJS)
