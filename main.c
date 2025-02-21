@@ -59,9 +59,20 @@ int main(void) {
         }
     } 
 
+    freeSnake(head);
+
     CloseWindow();
 
     return 0;
+}
+
+void freeSnake(Snake* head) {
+    Snake* tmp;
+    for(Snake* cur = head; cur != NULL; ) {
+        tmp = cur;
+        cur = cur->next;
+        free(tmp);
+    }
 }
 
 void drawScore(GameState* state) {

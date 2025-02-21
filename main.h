@@ -19,8 +19,6 @@
 #define BORDER_TOP 0
 #define BORDER_BOTTOM WINDOW_HEIGHT
 
-#define MAIN_TEXT_COL { .r = 200, .g = 200, .b = 200, .a = 255}
-
 #define SCORE_PADDING 10
 
 #define SNAKE_SIZE 50
@@ -52,6 +50,7 @@ typedef struct Snake {
 
 
 Snake* initSnake();
+void freeSnake(Snake* head);
 void drawBoard(Snake* head, GameState* state);
 void drawScore(GameState* state);
 void update(Snake* head, GameState* state);
