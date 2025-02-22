@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <time.h>
+#include <math.h>
 
 #include "main.h"
 
@@ -63,19 +64,9 @@ int main(void) {
             } else {
                 drawBoard(head, &state);
                 if(state.gameOver) {
-                    DrawText("game over", BOARD_X_OFF + BOARD_WIDTH / 2, BOARD_Y_OFF + BOARD_HEIGHT / 2, PAUSED_FONT_SIZE, mainTextCol);
-                    EndDrawing();
-                    WaitTime(2);
-                    freeSnake(head);
-                    head = initSnake(); 
-                    initState(head, &state);
-
-                    state.paused = true;
-                    
-                    BeginDrawing();
-                    
+                    resetGame(&head, &state); 
                 }
-                DrawText("paused", BOARD_X_OFF + BOARD_WIDTH / 2, BOARD_Y_OFF + BOARD_HEIGHT / 2, PAUSED_FONT_SIZE, mainTextCol);
+                DrawText("paused", BOARD_X_OFF + (int)(BOARD_WIDTH / 2) - (int)(PAUSED_FONT_SIZE * 1.5f), BOARD_Y_OFF + BOARD_HEIGHT / 2 - PAUSED_FONT_SIZE, PAUSED_FONT_SIZE, mainTextCol);
             }
 
         EndDrawing();
@@ -92,14 +83,39 @@ int main(void) {
     return 0;
 }
 
+void resetGame(Snake** head, GameState* state) {
+        DrawText("game over", BOARD_X_OFF + BOARD_WIDTH / 2 - PAUSED_FONT_SIZE * 2, BOARD_Y_OFF + BOARD_HEIGHT / 2 - PAUSED_FONT_SIZE, PAUSED_FONT_SIZE, mainTextCol);
+        EndDrawing();
+        WaitTime(2);
+        freeSnake(*head);
+        *head = initSnake(); 
+        resetState(*head, state);
+
+        BeginDrawing();
+}
+
+void resetState(Snake* head, GameState* state) {
+        state->paused = true;
+        state->gameOver = false;
+        state->dir = LEFT;
+        state->cookiePos = getNewCookiePos(head);
+        state->highScore = state->score > state->highScore ? state->score : state->highScore;
+        state->hsPosOffset = ((int)log10((double)state->highScore) + 1) * (SCORE_FONT_SIZE / 2);
+        state->score = 0;
+        sprintf(state->scoreText, "%d", 0);
+        sprintf(state->highScoreText, "%d", state->highScore);
+}
+
 void initState(Snake* head, GameState* state) {
         state->paused = false;
         state->gameOver = false;
-        state->init = true;
         state->dir = LEFT;
         state->cookiePos = getNewCookiePos(head);
+        state->highScore = 0;
         state->score = 0;
+        state->hsPosOffset = (SCORE_FONT_SIZE / 2);
         sprintf(state->scoreText, "%d", 0);
+        sprintf(state->highScoreText, "%d", 0);
 }
 
 void freeSnake(Snake* head) {
@@ -113,6 +129,7 @@ void freeSnake(Snake* head) {
 
 void drawScore(GameState* state) {
     DrawText(state->scoreText, BOARD_X_OFF + SCORE_PADDING, BOARD_Y_OFF + SCORE_PADDING, SCORE_FONT_SIZE, mainTextCol);
+    DrawText(state->highScoreText, BOARD_X_OFF + BOARD_WIDTH - SCORE_PADDING - state->hsPosOffset, BOARD_Y_OFF + SCORE_PADDING, SCORE_FONT_SIZE, mainTextCol);
 }
 
 void checkInput(GameState* state) {

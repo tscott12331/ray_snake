@@ -40,12 +40,15 @@ typedef enum {
 typedef struct {
     bool paused;
     bool gameOver;
-    bool init;
     DIR dir;
     Vector2 cookiePos;
 
     int score;
+    int highScore;
     char scoreText[256];
+    char highScoreText[256];
+
+    int hsPosOffset;
 } GameState;
 
 typedef struct Snake {
@@ -56,6 +59,8 @@ typedef struct Snake {
 
 Snake* initSnake();
 void initState(Snake* head, GameState* state);
+void resetState(Snake* head, GameState* state);
+void resetGame(Snake** head, GameState* state);
 void freeSnake(Snake* head);
 void drawBoard(Snake* head, GameState* state);
 void drawScore(GameState* state);
