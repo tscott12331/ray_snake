@@ -3,12 +3,13 @@
 
 #include "../include/raylib.h"
 
-#define GAME_FPS 10
+#define GAME_FPS 8
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 800
 
 #define BOARD_WIDTH 800
+#define BOARD_HEIGHT 800
 #define BOARD_NUM_COLS 16
 #define BOARD_NUM_ROWS 16
 #define BOARD_X_OFF 0
@@ -20,6 +21,9 @@
 #define BORDER_BOTTOM WINDOW_HEIGHT
 
 #define SCORE_PADDING 10
+#define SCORE_FONT_SIZE 25
+
+#define PAUSED_FONT_SIZE 35
 
 #define SNAKE_SIZE 50
 #define INIT_SNAKE_LEN 3
@@ -36,6 +40,7 @@ typedef enum {
 typedef struct {
     bool paused;
     bool gameOver;
+    bool init;
     DIR dir;
     Vector2 cookiePos;
 
@@ -50,6 +55,7 @@ typedef struct Snake {
 
 
 Snake* initSnake();
+void initState(Snake* head, GameState* state);
 void freeSnake(Snake* head);
 void drawBoard(Snake* head, GameState* state);
 void drawScore(GameState* state);

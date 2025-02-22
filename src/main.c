@@ -6,16 +6,23 @@
 #include "main.h"
 
 Color snakeCol = {
+    .r = 60,
+    .g = 80,
+    .b = 120,
+    .a = 255
+};
+
+Color headCol = {
     .r = 90,
-    .g = 100,
-    .b = 150,
+    .g = 120,
+    .b = 80,
     .a = 255
 };
 
 Color cookieCol = {
     .r = 150,
-    .g = 100,
-    .b = 90,
+    .g = 120,
+    .b = 80,
     .a = 255
 };
 
@@ -33,29 +40,48 @@ int main(void) {
     SetTargetFPS(GAME_FPS);
 
     Snake* head = initSnake(); 
-
-    GameState state = {
-        .paused = false,
-        .gameOver = false,
-        .dir = LEFT,
-        .cookiePos = getNewCookiePos(head),
-        .score = 0,
-        .scoreText = "0"
-    };
+    GameState state;
+    initState(head, &state);
+    /*GameState state = {*/
+    /*    .paused = false,*/
+    /*    .gameOver = false,*/
+    /*    .init = true,*/
+    /*    .dir = LEFT,*/
+    /*    .cookiePos = getNewCookiePos(head),*/
+    /*    .score = 0,*/
+    /*    .scoreText = "0"*/
+    /*};*/
 
     while(!WindowShouldClose()) {
         BeginDrawing();
 
             checkInput(&state);
-            drawBoard(head, &state);
-            drawScore(&state);
-            update(head, &state);
+            if(!state.paused) {
+                drawBoard(head, &state);
+                drawScore(&state);
+                update(head, &state);
+            } else {
+                drawBoard(head, &state);
+                if(state.gameOver) {
+                    DrawText("game over", BOARD_X_OFF + BOARD_WIDTH / 2, BOARD_Y_OFF + BOARD_HEIGHT / 2, PAUSED_FONT_SIZE, mainTextCol);
+                    EndDrawing();
+                    WaitTime(2);
+                    freeSnake(head);
+                    head = initSnake(); 
+                    initState(head, &state);
+
+                    state.paused = true;
+                    
+                    BeginDrawing();
+                    
+                }
+                DrawText("paused", BOARD_X_OFF + BOARD_WIDTH / 2, BOARD_Y_OFF + BOARD_HEIGHT / 2, PAUSED_FONT_SIZE, mainTextCol);
+            }
 
         EndDrawing();
 
         if(state.gameOver) {
-            printf("game le over\n");
-            break;
+            state.paused = true;
         }
     } 
 
@@ -64,6 +90,16 @@ int main(void) {
     CloseWindow();
 
     return 0;
+}
+
+void initState(Snake* head, GameState* state) {
+        state->paused = false;
+        state->gameOver = false;
+        state->init = true;
+        state->dir = LEFT;
+        state->cookiePos = getNewCookiePos(head);
+        state->score = 0;
+        sprintf(state->scoreText, "%d", 0);
 }
 
 void freeSnake(Snake* head) {
@@ -76,23 +112,30 @@ void freeSnake(Snake* head) {
 }
 
 void drawScore(GameState* state) {
-    DrawText(state->scoreText, BOARD_X_OFF + SCORE_PADDING, BOARD_Y_OFF + SCORE_PADDING, 15, mainTextCol);
+    DrawText(state->scoreText, BOARD_X_OFF + SCORE_PADDING, BOARD_Y_OFF + SCORE_PADDING, SCORE_FONT_SIZE, mainTextCol);
 }
 
 void checkInput(GameState* state) {
     KeyboardKey key = GetKeyPressed();
     switch(key) {
         case KEY_W:
+            if(state->dir == DOWN) break;
             state->dir = UP;
             break;
         case KEY_A:
+            if(state->dir == RIGHT) break;
             state->dir = LEFT;
             break;
         case KEY_S:
+            if(state->dir == UP) break;
             state->dir = DOWN;
             break;
         case KEY_D:
+            if(state->dir == LEFT) break;
             state->dir = RIGHT;
+            break;
+        case KEY_SPACE:
+            state->paused = !state->paused;
             break;
         default:
             break;
@@ -113,8 +156,8 @@ Vector2 getNewCookiePos(Snake* head) {
     /* NOT IMPLEMENTED */
     Vector2 newPos;
     do {
-        newPos.x = BOARD_X_OFF + (rand() % BOARD_NUM_COLS) * 50;
-        newPos.y = BOARD_Y_OFF + (rand() % BOARD_NUM_ROWS) * 50;
+        newPos.x = BOARD_X_OFF + (rand() % BOARD_NUM_COLS) * SNAKE_SIZE;
+        newPos.y = BOARD_Y_OFF + (rand() % BOARD_NUM_ROWS) * SNAKE_SIZE;
     } while(isInSnake(head, newPos));
     
     return newPos;
@@ -170,12 +213,15 @@ static void moveSnakeHead(Snake* head, GameState* state) {
     }
 }
 
-static void moveSnakeBody(Snake* head, Vector2 headPrev) {
+static void moveSnakeBody(Snake* head, Vector2 headPrev, GameState* state) {
     Vector2 movePos = headPrev;
     for(Snake* cur = head->next; cur != NULL; cur = cur->next) {
         Vector2 prevPos = cur->pos;
         cur->pos = movePos;
         movePos = prevPos; 
+        if(head->pos.x == cur->pos.x && head->pos.y == cur->pos.y) {
+            state->gameOver = true;
+        }
     }
 }
 
@@ -201,7 +247,9 @@ void update(Snake* head, GameState* state) {
         sprintf(state->scoreText, "%d", ++state->score);
     }
     
-    moveSnakeBody(head, headPrev);  
+    moveSnakeBody(head, headPrev, state);  
+    if(state->gameOver) return;
+
 
     if(ate) {
         if(state->score + INIT_SNAKE_LEN == (BOARD_NUM_ROWS * BOARD_NUM_COLS)) {
@@ -215,26 +263,27 @@ void update(Snake* head, GameState* state) {
 }
 
 void drawBoard(Snake* head, GameState* state) {
-    ClearBackground(DARKGRAY);
+    ClearBackground(BLACK);
 
-    for(Snake* cur = head; cur != NULL; cur = cur->next) {
+    DrawRectangle(head->pos.x, head->pos.y, SNAKE_SIZE, SNAKE_SIZE, headCol);
+    for(Snake* cur = head->next; cur != NULL; cur = cur->next) {
         DrawRectangle(cur->pos.x, cur->pos.y, SNAKE_SIZE, SNAKE_SIZE, snakeCol);
     }
-    
+
     DrawCircle(state->cookiePos.x + (SNAKE_SIZE / 2.0f), state->cookiePos.y + (SNAKE_SIZE / 2.0f), COOKIE_RAD, cookieCol);
 
 }
 
 Snake* initSnake() {        
-    int x = GetScreenWidth()/2.0f;
-    int y = GetScreenHeight()/2.0f;
+    int x = GetScreenWidth()/2.0f + (2 * SNAKE_SIZE);
+    int y = GetScreenHeight()/2.0f + (2 * SNAKE_SIZE);
 
     Snake* cur;
     Snake* prev = NULL; 
 
     for(int i = 0; i < INIT_SNAKE_LEN; i++) {
         cur = (Snake*) malloc(sizeof(Snake));
-        cur->pos.x = x + (SNAKE_SIZE * i);
+        cur->pos.x = x - (SNAKE_SIZE * i);
         cur->pos.y = y;
         cur->next = prev;
 
